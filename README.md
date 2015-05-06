@@ -68,4 +68,4 @@ to create partitions of various sizes.
 
 ## License
 
-BSD
+Apache 2.0
