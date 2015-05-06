@@ -1,0 +1,27 @@
+---
+- name: Install NFS server on Fedora/Red Hat
+  yum: name=nfs-utils state=installed
+  when: ansible_os_family == "RedHat"
+
+- name: Install NFS server on Debian/Ubuntu
+  apt: name=nfs-kernel-server state=installed
+  when: ansible_os_family == "Debian"
+
+- name: Start rpcbind on Fedora/Red Hat
+  service: name=rpcbind state=started enabled=yes
+  when: ansible_os_family == "RedHat"
+
+- name: Start nfs on Fedora/Red Hat
+  service: name=nfs-server state=started enabled=yes
+  when: ansible_os_family == "RedHat"
+
+- name: Start nfs-kernel-server on Debian/Ubuntu
+  service: name=nfs-kernel-server state=started enabled=yes
+  when: ansible_os_family == "Debian"
+
+- name: Export the directories
+  lineinfile: dest=/etc/exports
+              regexp="^{{ mount_dir }}/{{ item.name }} "
+              line="{{ mount_dir }}/{{ item.name }} {{nfs_export_options}}"
+  with_items: partition_pool
+  notify: restart nfs
