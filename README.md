@@ -66,6 +66,44 @@ are exported via NFS and added as physical volumes to Kubernetes running at
 See library/partitionpool.py for details how `sizes` parameter can be used
 to create partitions of various sizes.
 
+## Full example
+Let's say there are two machines, 10.0.0.1 and 10.0.0.2, that we want to use as
+NFS servers for our Kubernetes cluster, running Kubernetes public API at
+https://10.245.1.2:6443.
+
+Both servers have three 1 TB disks, /dev/sda for the system and /dev/sdb and
+/dev/sdc to be partitioned. We want to split the data disks into 5, 10 and
+20 GiB partitions so that 10% of the total capacity is in 5 GiB partitions, 40%
+in 10 GiB and 50% in 20 GiB partitions.
+
+That means, each data disk will have 20x 5 GiB, 40x 10 GiB and 25x 20 GiB
+partitions.
+
+* Create an `inventory` file:
+    ```
+    [nfsservers]
+    10.0.0.1
+    10.0.0.2
+    ```
+
+* Create an ansible playbook, say `setupnfs.yaml`:
+    ```
+    - hosts: nfsservers
+      sudo: yes
+      roles:
+         - role: kubernetes-nfs-pvs
+           disks: "/dev/sdb,/dev/sdc"
+           sizes: 5G:10,10G:40,20G:50
+           force: no
+           kubernetes_url: https://10.245.1.2:6443
+           kubernetes_token: tJdce6Fn3cL1112YoIJ5m2exzAbzcPZX
+    ```
+
+* Run the playbook:
+    ```
+    ansible-playbook -i inventory setupnfs.yml
+    ```
+
 ## License
 
 Apache 2.0
